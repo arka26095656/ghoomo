@@ -1,0 +1,78 @@
+server:
+  port: ${PORT:8080}
+  # SSE replies can take a while when the LLM is slow
+  tomcat:
+    connection-timeout: 60s
+
+spring:
+  application:
+    name: ghoomo-api
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    # Local default: in-memory H2 in PostgreSQL mode, so the app runs with zero setup.
+    # Set DATABASE_URL / DATABASE_USERNAME / DATABASE_PASSWORD for Postgres (Supabase / Neon).
+    url: ${DATABASE_URL:jdbc:h2:mem:ghoomo;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH}
+    username: ${DATABASE_USERNAME:sa}
+    password: ${DATABASE_PASSWORD:}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none   # schema is owned by Flyway
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=30m
+  mvc:
+    async:
+      request-timeout: 120s
+
+app:
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:5173}
+  jwt:
+    # MUST be overridden in production: at least 32 characters
+    secret: ${JWT_SECRET:dev-only-secret-change-me-please-0123456789abcdef}
+    ttl-hours: ${JWT_TTL_HOURS:72}
+  rate-limit:
+    chat-per-minute: ${CHAT_RATE_PER_MINUTE:8}
+  ai:
+    # Used when every real provider fails or none is configured: keeps the demo working offline
+    mock-fallback: ${AI_MOCK_FALLBACK:true}
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      # Alias that tracks Google's current Flash model; pin a specific one (e.g. gemini-2.5-flash) if you prefer
+      model: ${GEMINI_MODEL:gemini-flash-latest}
+      base-url: https://generativelanguage.googleapis.com/v1beta
+    groq:
+      api-key: ${GROQ_API_KEY:}
+      model: ${GROQ_MODEL:llama-3.3-70b-versatile}
+      base-url: https://api.groq.com/openai/v1
+  travel:
+    user-agent: ${TRAVEL_USER_AGENT:Ghoomo/0.1 (portfolio travel planner)}
+    nominatim-url: https://nominatim.openstreetmap.org
+    overpass-url: https://overpass-api.de/api/interpreter
+    open-meteo-url: https://api.open-meteo.com/v1
+    frankfurter-url: https://api.frankfurter.dev/v1
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+logging:
+  level:
+    com.ghoomo: INFO
