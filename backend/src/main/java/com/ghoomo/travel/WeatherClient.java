@@ -30,7 +30,7 @@ public class WeatherClient {
     }
 
     /** Empty when the dates are outside the forecast window or the call fails. */
-    @Cacheable(cacheNames = "weather", key = "T(java.lang.Math).round(#lat * 100) + ':' + T(java.lang.Math).round(#lng * 100) + ':' + #from + ':' + #days")
+    @Cacheable(cacheNames = "weather", key = "T(java.lang.Math).round(#lat * 100) + ':' + T(java.lang.Math).round(#lng * 100) + ':' + #from + ':' + #days", unless = "#result.isEmpty()")
     public List<DayWeather> forecast(double lat, double lng, LocalDate from, int days) {
         LocalDate today = LocalDate.now();
         LocalDate start = from == null ? today : from;

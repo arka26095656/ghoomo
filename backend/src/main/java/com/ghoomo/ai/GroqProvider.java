@@ -67,6 +67,11 @@ public class GroqProvider implements LlmProvider {
         root.put("temperature", request.temperature());
         root.put("stream", stream);
         if (request.json()) root.putObject("response_format").put("type", "json_object");
+        // gpt-oss models reason before answering: keep that short, and leave room for a multi-day plan.
+        if (cfg.model().startsWith("openai/gpt-oss")) {
+            root.put("reasoning_effort", "low");
+            root.put("max_completion_tokens", 8192);
+        }
 
         ArrayNode messages = root.putArray("messages");
         messages.addObject().put("role", "system").put("content", request.system());

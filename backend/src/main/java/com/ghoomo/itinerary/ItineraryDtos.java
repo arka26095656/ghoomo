@@ -31,5 +31,5 @@ public final class ItineraryDtos {
 
     public record UpdateDayRequest(
             @Size(max = 200) String theme,
-            @NotNull @Size(max = 12) List<@Valid ItineraryPlan.Activity> activities) {}
+            @NotNull @Size(max = 12) List<ItineraryPlan.@Valid Activity> activities) {}
 }

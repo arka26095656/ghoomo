@@ -96,24 +96,38 @@ public class TripPlanner {
         List<Message> msgs = new ArrayList<>(List.of(Message.user(context)));
         var req = new LlmRequest(Task.PLAN, PromptTemplates.plan(LocalDate.now()), msgs, true, 0.6, hints);
 
-        LlmRouter.Answer answer = llm.complete(req);
-        ItineraryPlan plan;
-        try {
-            plan = PlanJson.parse(mapper, answer.text(), ItineraryPlan.class);
-        } catch (IllegalArgumentException first) {
-            // One repair attempt: show the model its mistake.
-            log.warn("Plan JSON invalid from {}, retrying: {}", answer.provider(), first.getMessage());
-            msgs.add(Message.assistant(answer.text()));
-            msgs.add(Message.user("That was not valid JSON in the required shape. Reply again with ONLY the JSON object."));
-            answer = llm.complete(new LlmRequest(Task.PLAN, req.system(), msgs, true, 0.3, hints));
+        // Up to two attempts. A reply is rejected if it isn't valid JSON or has the wrong number of days;
+        // the second attempt shows the model its own reply and what was wrong with it.
+        LlmRouter.Answer answer = null;
+        ItineraryPlan best = null;
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            answer = llm.complete(attempt == 1 ? req
+                    : new LlmRequest(Task.PLAN, req.system(), List.copyOf(msgs), true, 0.3, hints));
+            String problem;
             try {
-                plan = PlanJson.parse(mapper, answer.text(), ItineraryPlan.class);
-            } catch (IllegalArgumentException second) {
-                throw new ApiException(HttpStatus.BAD_GATEWAY,
-                        "The AI returned an itinerary I couldn't read. Try asking again.");
+                ItineraryPlan plan = PlanJson.parse(mapper, answer.text(), ItineraryPlan.class);
+                best = plan;
+                int got = plan.days() == null ? 0 : plan.days().size();
+                problem = got == intent.days() ? null
+                        : "the \"days\" array had " + got + " object(s) but the trip is " + intent.days() + " days";
+            } catch (IllegalArgumentException e) {
+                problem = e.getMessage();
             }
+            if (problem == null) break;
+
+            String text = answer.text() == null ? "" : answer.text();
+            log.warn("Plan from {} rejected (attempt {}): {}. Reply starts: {}", answer.provider(), attempt, problem,
+                    text.substring(0, Math.min(300, text.length())).replace('\n', ' '));
+            msgs.add(Message.assistant(text));
+            msgs.add(Message.user("That reply was rejected because " + problem + ". Reply again with ONLY the JSON object. "
+                    + "\"days\" must be an array of exactly " + intent.days() + " separate objects, one per day, "
+                    + "each with its own \"day\", \"theme\" and \"activities\". Include \"tips\"."));
         }
-        return new PlanResult(repair(plan, intent, center, nearby, forecast), intent, answer.provider());
+        if (best == null) {
+            throw new ApiException(HttpStatus.BAD_GATEWAY, "The AI returned an itinerary I couldn't read. Try asking again.");
+        }
+        // If the retry still has the wrong day count, a readable plan beats an error.
+        return new PlanResult(repair(best, intent, center, nearby, forecast), intent, answer.provider());
     }
 
     // ---------- helpers ----------

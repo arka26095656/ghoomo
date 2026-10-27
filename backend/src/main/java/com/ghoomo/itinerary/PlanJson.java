@@ -1,6 +1,7 @@
 package com.ghoomo.itinerary;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
@@ -24,9 +25,16 @@ public final class PlanJson {
         return s.substring(start, end + 1);
     }
 
+    /**
+     * Strict on purpose: a repeated key (e.g. two "theme" fields in one object) usually means the model
+     * merged several days into one object. Failing loudly lets the planner ask the model to fix it,
+     * instead of silently keeping only the last day.
+     */
     public static <T> T parse(ObjectMapper mapper, String raw, Class<T> type) {
         try {
-            return mapper.readValue(extractObject(raw), type);
+            return mapper.readerFor(type)
+                    .with(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+                    .readValue(extractObject(raw));
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Model reply was not valid JSON: " + e.getOriginalMessage(), e);
         }

@@ -1,6 +1,7 @@
 package com.ghoomo.travel;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ghoomo.config.AppProperties;
 import com.ghoomo.travel.TravelModels.Place;
 import org.slf4j.Logger;
@@ -21,20 +22,23 @@ public class PlacesClient {
     private static final int MAX_PLACES = 45;
 
     private final RestClient rest;
+    private final ObjectMapper mapper;
 
-    public PlacesClient(AppProperties props, RestClient.Builder builder) {
+    public PlacesClient(AppProperties props, RestClient.Builder builder, ObjectMapper mapper) {
         this.rest = builder.clone()
                 .baseUrl(props.travel().overpassUrl())
                 .defaultHeader("User-Agent", props.travel().userAgent())
+                .defaultHeader("Accept", "application/json")
                 .requestFactory(GeocodingClient.TravelHttp.factory())
                 .build();
+        this.mapper = mapper;
     }
 
     /**
      * Named attractions, nature spots and restaurants within the radius.
      * Returns an empty list on failure: the planner then lets the LLM rely on its own knowledge.
      */
-    @Cacheable(cacheNames = "places", key = "T(java.lang.Math).round(#lat * 100) + ':' + T(java.lang.Math).round(#lng * 100) + ':' + #radiusKm")
+    @Cacheable(cacheNames = "places", key = "T(java.lang.Math).round(#lat * 100) + ':' + T(java.lang.Math).round(#lng * 100) + ':' + #radiusKm", unless = "#result.isEmpty()")
     public List<Place> nearby(double lat, double lng, int radiusKm) {
         int r = radiusKm * 1000;
         int food = Math.min(r, 6000);
@@ -49,12 +53,18 @@ public class PlacesClient {
         try {
             var form = new LinkedMultiValueMap<String, String>();
             form.add("data", query);
-            JsonNode root = rest.post()
+            // Overpass sometimes labels JSON as application/octet-stream, so read text and parse it ourselves.
+            String body = rest.post()
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .body(form)
                     .retrieve()
-                    .body(JsonNode.class);
-            return parse(root);
+                    .body(String.class);
+            if (body == null || !body.trim().startsWith("{")) {
+                log.warn("Overpass returned a non-JSON reply near {},{}: {}", lat, lng,
+                        body == null ? "empty" : body.substring(0, Math.min(200, body.length())));
+                return List.of();
+            }
+            return parse(mapper.readTree(body));
         } catch (Exception e) {
             log.warn("Overpass lookup failed near {},{}: {}", lat, lng, e.getMessage());
             return List.of();

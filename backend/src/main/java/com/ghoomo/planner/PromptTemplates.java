@@ -44,7 +44,8 @@ public final class PromptTemplates {
                 CONTEXT JSON the user sends. Today is %s.
 
                 Rules:
-                - Exactly the number of days requested, numbered from 1.
+                - Exactly the number of days requested, numbered from 1. "days" is an array with one
+                  separate object per day; never put two days' fields in the same object.
                 - 3 to 5 activities per day in time order, with local 24-hour times like "09:00".
                 - Include at least one meal per day (breakfast, lunch or dinner spot) with a local dish to try.
                 - Prefer places from the "places" list and copy their exact name, lat and lng. You may add

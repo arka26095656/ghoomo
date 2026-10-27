@@ -75,6 +75,11 @@ public class GeminiProvider implements LlmProvider {
         ObjectNode gen = root.putObject("generationConfig");
         gen.put("temperature", request.temperature());
         if (request.json()) gen.put("responseMimeType", "application/json");
+        // Gemini 3+ models "think" before answering, which can take a minute. Planning a trip doesn't need
+        // deep reasoning, so ask for the lowest level 3.8 Flash supports. Gemini 2.5 uses a different setting.
+        if (!cfg.model().startsWith("gemini-2")) {
+            gen.putObject("thinkingConfig").put("thinkingLevel", "low");
+        }
         return root.toString();
     }
 

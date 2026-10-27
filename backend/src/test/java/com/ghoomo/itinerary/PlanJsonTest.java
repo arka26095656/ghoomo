@@ -39,4 +39,16 @@ class PlanJsonTest {
         assertThat(plan.days().get(0).activities().get(1).estCostInr()).isEqualTo(800);
         assertThat(plan.withRecomputedTotal().estimatedTotalInr()).isEqualTo(800);
     }
+
+    @Test
+    void rejectsDuplicateKeysSoMergedDaysAreCaught() {
+        // What a model produces when it crams three days into one object.
+        String raw = """
+                {"title":"x","destination":"Jaipur","days":[
+                  {"day":1,"theme":"Forts","activities":[],"day":2,"theme":"Markets","activities":[]}]}
+                """;
+        assertThatThrownBy(() -> PlanJson.parse(HttpConfig.lenientMapper(), raw, ItineraryPlan.class))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Duplicate field");
+    }
 }
