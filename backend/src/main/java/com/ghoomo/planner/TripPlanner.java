@@ -68,6 +68,7 @@ public class TripPlanner {
     }
 
     public PlanResult plan(TripIntent rawIntent, User user, Consumer<String> status) {
+        long startNanos = System.nanoTime();
         TripIntent intent = rawIntent.normalised();
         LocalDate start = parseDate(intent.startDate());
 
@@ -127,7 +128,12 @@ public class TripPlanner {
             throw new ApiException(HttpStatus.BAD_GATEWAY, "The AI returned an itinerary I couldn't read. Try asking again.");
         }
         // If the retry still has the wrong day count, a readable plan beats an error.
-        return new PlanResult(repair(best, intent, center, nearby, forecast), intent, answer.provider());
+        ItineraryPlan repaired = repair(best, intent, center, nearby, forecast);
+        log.info("Planned {} ({} days) with {} in {} ms: {} real places, {} forecast days, {} activities",
+                intent.destination(), repaired.days().size(), answer.provider(),
+                (System.nanoTime() - startNanos) / 1_000_000, nearby.size(), forecast.size(),
+                repaired.days().stream().mapToInt(d -> d.activities().size()).sum());
+        return new PlanResult(repaired, intent, answer.provider());
     }
 
     // ---------- helpers ----------

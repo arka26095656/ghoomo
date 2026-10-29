@@ -1,22 +1,18 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Compass, LogOut, Map, SlidersHorizontal } from 'lucide-react';
+import { NavLink, Outlet } from 'react-router-dom';
+import { Compass, Map } from 'lucide-react';
 import clsx from 'clsx';
 import { Logo } from './Logo';
-import { useAuth } from '../lib/auth';
+import { AccountMenu } from './AccountMenu';
 
 const links = [
   { to: '/plan', label: 'Plan', icon: Compass },
   { to: '/trips', label: 'My trips', icon: Map },
-  { to: '/settings', label: 'Preferences', icon: SlidersHorizontal },
 ];
 
 export function AppShell() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-paper/90 px-4 backdrop-blur sm:px-6">
+      <header className="relative z-40 flex h-14 shrink-0 items-center gap-2 border-b border-line bg-paper/90 px-4 backdrop-blur sm:px-6">
         <NavLink to="/plan" aria-label="Ghoomo home">
           <Logo />
         </NavLink>
@@ -37,19 +33,8 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-3">
-          <span className="hidden text-sm text-muted md:inline">{user?.name}</span>
-          <button
-            className="btn-quiet px-2.5"
-            onClick={() => {
-              logout();
-              navigate('/');
-            }}
-            aria-label="Log out"
-            title="Log out"
-          >
-            <LogOut size={16} />
-          </button>
+        <div className="ml-auto">
+          <AccountMenu />
         </div>
       </header>
       <main className="min-h-0 flex-1">

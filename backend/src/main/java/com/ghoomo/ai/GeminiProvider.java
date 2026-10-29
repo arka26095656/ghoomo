@@ -34,7 +34,7 @@ public class GeminiProvider implements LlmProvider {
     @Override
     public String complete(LlmRequest request) {
         String url = cfg.baseUrl() + "/models/" + cfg.model() + ":generateContent";
-        String body = HttpLlmSupport.send(http, HttpLlmSupport.post(url, headers(), buildBody(request)), name());
+        String body = HttpLlmSupport.send(http, HttpLlmSupport.post(url, headers(), buildBody(request), cfg.timeout()), name());
         try {
             return extractText(mapper.readTree(body));
         } catch (Exception e) {
@@ -45,7 +45,7 @@ public class GeminiProvider implements LlmProvider {
     @Override
     public void stream(LlmRequest request, Consumer<String> onToken) {
         String url = cfg.baseUrl() + "/models/" + cfg.model() + ":streamGenerateContent?alt=sse";
-        HttpLlmSupport.sendSse(http, HttpLlmSupport.post(url, headers(), buildBody(request)), name(), data -> {
+        HttpLlmSupport.sendSse(http, HttpLlmSupport.post(url, headers(), buildBody(request), cfg.timeout()), name(), data -> {
             try {
                 String text = extractText(mapper.readTree(data));
                 if (!text.isEmpty()) onToken.accept(text);

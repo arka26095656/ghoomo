@@ -36,7 +36,7 @@ public class GroqProvider implements LlmProvider {
     @Override
     public String complete(LlmRequest request) {
         String body = HttpLlmSupport.send(http,
-                HttpLlmSupport.post(cfg.baseUrl() + "/chat/completions", headers(), buildBody(request, false)), name());
+                HttpLlmSupport.post(cfg.baseUrl() + "/chat/completions", headers(), buildBody(request, false), cfg.timeout()), name());
         try {
             return mapper.readTree(body).path("choices").path(0).path("message").path("content").asText("");
         } catch (Exception e) {
@@ -47,7 +47,7 @@ public class GroqProvider implements LlmProvider {
     @Override
     public void stream(LlmRequest request, Consumer<String> onToken) {
         HttpLlmSupport.sendSse(http,
-                HttpLlmSupport.post(cfg.baseUrl() + "/chat/completions", headers(), buildBody(request, true)), name(), data -> {
+                HttpLlmSupport.post(cfg.baseUrl() + "/chat/completions", headers(), buildBody(request, true), cfg.timeout()), name(), data -> {
                     try {
                         String text = mapper.readTree(data).path("choices").path(0).path("delta").path("content").asText("");
                         if (!text.isEmpty()) onToken.accept(text);

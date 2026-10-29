@@ -47,15 +47,20 @@ app:
   ai:
     # Used when every real provider fails or none is configured: keeps the demo working offline
     mock-fallback: ${AI_MOCK_FALLBACK:true}
+    # Which provider to try first. Swap to "groq,gemini" if Gemini is slow for you.
+    order: ${AI_PROVIDER_ORDER:gemini,groq}
     gemini:
       api-key: ${GEMINI_API_KEY:}
       # Alias that tracks Google's current Flash model; pin a specific one (e.g. gemini-2.5-flash) if you prefer
       model: ${GEMINI_MODEL:gemini-flash-latest}
       base-url: https://generativelanguage.googleapis.com/v1beta
+      # Short on purpose: if Gemini is overloaded, hand over to Groq quickly instead of waiting a minute
+      timeout-seconds: ${GEMINI_TIMEOUT_SECONDS:25}
     groq:
       api-key: ${GROQ_API_KEY:}
       model: ${GROQ_MODEL:openai/gpt-oss-120b}
       base-url: https://api.groq.com/openai/v1
+      timeout-seconds: ${GROQ_TIMEOUT_SECONDS:60}
   travel:
     user-agent: ${TRAVEL_USER_AGENT:Ghoomo/0.1 (portfolio travel planner)}
     nominatim-url: https://nominatim.openstreetmap.org

@@ -121,6 +121,63 @@
   }
 }
 
+/*
+ * Forced dark mode (account menu → Dark). Same tokens as the prefers-color-scheme blocks above,
+ * applied whatever the OS setting. Keep the two in sync when changing a dark colour.
+ */
+:root[data-theme='dark'] {
+  --paper: 13 25 38;
+  --surface: 20 36 55;
+  --sunk: 16 30 46;
+  --ink: 230 237 242;
+  --muted: 148 165 182;
+  --line: 36 56 79;
+  --marigold: 242 181 58;
+  --leaf: 80 182 152;
+  --danger: 236 110 110;
+  --brand: 230 237 242;
+  --on-brand: 13 25 38;
+  --bubble: 230 237 242;
+  --on-bubble: 13 25 38;
+  color-scheme: dark;
+}
+:root[data-dest='rajasthan'][data-theme='dark'] {
+  --paper: 30 20 12; --surface: 43 29 18; --sunk: 36 24 15;
+  --ink: 247 234 214; --muted: 196 164 130; --line: 74 52 34;
+  --marigold: 240 180 85; --leaf: 120 186 128;
+  --brand: 224 132 72; --on-brand: 30 20 12; --bubble: 224 132 72; --on-bubble: 30 20 12;
+}
+:root[data-dest='kerala'][data-theme='dark'] {
+  --paper: 12 26 17; --surface: 18 37 25; --sunk: 15 31 21;
+  --ink: 226 240 228; --muted: 150 182 158; --line: 38 66 47;
+  --marigold: 92 182 196; --leaf: 120 196 96;
+  --brand: 108 190 128; --on-brand: 12 26 17; --bubble: 108 190 128; --on-bubble: 12 26 17;
+}
+:root[data-dest='goa'][data-theme='dark'] {
+  --paper: 8 24 38; --surface: 14 35 54; --sunk: 11 29 45;
+  --ink: 230 240 246; --muted: 148 172 190; --line: 32 58 82;
+  --marigold: 244 211 94; --leaf: 0 180 216;
+  --brand: 72 182 230; --on-brand: 8 24 38; --bubble: 72 182 230; --on-bubble: 8 24 38;
+}
+:root[data-dest='himalayas'][data-theme='dark'] {
+  --paper: 12 18 28; --surface: 20 29 44; --sunk: 16 23 35;
+  --ink: 228 236 244; --muted: 150 168 188; --line: 38 52 72;
+  --marigold: 240 90 100; --leaf: 80 182 152;
+  --brand: 168 196 222; --on-brand: 12 18 28; --bubble: 168 196 222; --on-bubble: 12 18 28;
+}
+:root[data-dest='japan'][data-theme='dark'] {
+  --paper: 22 18 19; --surface: 33 27 28; --sunk: 27 22 23;
+  --ink: 242 234 230; --muted: 180 160 158; --line: 62 50 51;
+  --marigold: 240 110 125; --leaf: 140 190 140;
+  --brand: 236 96 114; --on-brand: 22 18 19; --bubble: 244 167 185; --on-bubble: 43 20 26;
+}
+:root[data-dest='santorini'][data-theme='dark'] {
+  --paper: 9 22 38; --surface: 15 33 55; --sunk: 12 27 46;
+  --ink: 230 238 248; --muted: 150 170 195; --line: 30 52 80;
+  --marigold: 246 186 120; --leaf: 80 182 152;
+  --brand: 110 170 230; --on-brand: 9 22 38; --bubble: 110 170 230; --on-bubble: 9 22 38;
+}
+
 @layer base {
   html,
   body,

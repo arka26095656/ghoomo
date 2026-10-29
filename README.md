@@ -119,8 +119,10 @@ docker compose up --build     # Postgres + API on :8080
 | `GEMINI_API_KEY` | — | Primary LLM (free tier: Flash models) |
 | `GEMINI_MODEL` | `gemini-flash-latest` | Any Gemini model id |
 | `GROQ_API_KEY` | — | Fallback LLM |
-| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Check the Groq console for current model ids |
+| `GROQ_MODEL` | `openai/gpt-oss-120b` | Check the Groq console for current model ids |
 | `AI_MOCK_FALLBACK` | `true` | Use the offline planner when no provider answers |
+| `AI_PROVIDER_ORDER` | `gemini,groq` | Which provider is tried first |
+| `GEMINI_TIMEOUT_SECONDS` / `GROQ_TIMEOUT_SECONDS` | `25` / `60` | Wait before failing over to the next provider |
 | `DATABASE_URL` / `_USERNAME` / `_PASSWORD` | H2 in memory | JDBC URL, e.g. `jdbc:postgresql://host:5432/postgres?sslmode=require` |
 | `JWT_SECRET` | dev value | **Set in production**, 32+ characters |
 | `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated frontend origins |

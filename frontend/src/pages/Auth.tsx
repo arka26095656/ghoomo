@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Logo } from '../components/Logo';
+import { PasswordField } from '../components/PasswordField';
 import { useAuth } from '../lib/auth';
 import { ApiError } from '../lib/api';
 
@@ -80,10 +81,8 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
             <label className="label" htmlFor="password">
               Password
             </label>
-            <input
+            <PasswordField
               id="password"
-              type="password"
-              className="field"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete={isRegister ? 'new-password' : 'current-password'}

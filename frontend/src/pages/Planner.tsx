@@ -10,6 +10,7 @@ import { api, ApiError } from '../lib/api';
 import { sendChatMessage } from '../lib/stream';
 import { relativeTime } from '../lib/format';
 import { useDestinationTheme } from '../lib/theme';
+import { useDismiss } from '../lib/useDismiss';
 import type { ChatMessage, ChatSession, ItineraryDetail } from '../types';
 
 export function Planner() {
@@ -25,6 +26,12 @@ export function Planner() {
   const [mobileView, setMobileView] = useState<'chat' | 'plan'>('chat');
   const abortRef = useRef<AbortController | null>(null);
   const startedFromQuery = useRef(false);
+  const historyButtonRef = useRef<HTMLButtonElement>(null);
+  const historyPanelRef = useRef<HTMLDivElement>(null);
+
+  // Close the history list on a click outside it or Escape.
+  const closeHistory = useCallback(() => setShowHistory(false), []);
+  useDismiss(showHistory, closeHistory, [historyButtonRef, historyPanelRef]);
 
   // The whole app takes on the destination's colours while a trip is open.
   useDestinationTheme(itinerary?.themeKey);
@@ -120,6 +127,17 @@ export function Planner() {
     refreshSessions();
   }, [refreshSessions]);
 
+  // "Chat history" in the account menu links to /plan?history=1
+  useEffect(() => {
+    if (params.get('history') === '1') {
+      setShowHistory(true);
+      setMobileView('chat');
+      const next = new URLSearchParams(params);
+      next.delete('history');
+      setParams(next, { replace: true });
+    }
+  }, [params, setParams]);
+
   // Prompt typed on the landing page: /plan?q=...
   useEffect(() => {
     const q = params.get('q');
@@ -165,7 +183,12 @@ export function Planner() {
           <h1 className="min-w-0 flex-1 truncate px-1 font-sans text-sm font-semibold">
             {sessions.find((s) => s.id === sessionId)?.title ?? 'New trip chat'}
           </h1>
-          <button className="btn-quiet px-2.5 py-1.5" onClick={() => setShowHistory((v) => !v)} aria-expanded={showHistory}>
+          <button
+            ref={historyButtonRef}
+            className="btn-quiet px-2.5 py-1.5"
+            onClick={() => setShowHistory((v) => !v)}
+            aria-expanded={showHistory}
+          >
             <History size={16} aria-hidden="true" />
             <span className="sr-only sm:not-sr-only">History</span>
           </button>
@@ -176,7 +199,10 @@ export function Planner() {
         </div>
 
         {showHistory && (
-          <div className="absolute inset-x-0 top-12 z-20 max-h-[60%] overflow-y-auto border-b border-line bg-surface shadow-lg">
+          <div
+            ref={historyPanelRef}
+            className="absolute inset-x-0 top-12 z-20 max-h-[60%] overflow-y-auto border-b border-line bg-surface shadow-lg"
+          >
             {sessions.length === 0 ? (
               <p className="p-4 text-sm text-muted">Your past chats will show up here.</p>
             ) : (

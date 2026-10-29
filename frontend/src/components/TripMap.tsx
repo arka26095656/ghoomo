@@ -89,7 +89,7 @@ export function TripMap({
   }, [pins]);
 
   return (
-    <div className={`relative overflow-hidden rounded-card border border-line ${className}`}>
+    <div className={`relative isolate overflow-hidden rounded-card border border-line ${className}`}>
       <MapContainer
         center={center ?? [22.5, 79]}
         zoom={center ? 11 : 4}

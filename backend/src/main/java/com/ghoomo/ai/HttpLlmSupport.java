@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -14,11 +15,9 @@ import java.util.stream.Stream;
 final class HttpLlmSupport {
     private HttpLlmSupport() {}
 
-    static final Duration TIMEOUT = Duration.ofSeconds(60);
-
-    static HttpRequest post(String url, Map<String, String> headers, String body) {
+    static HttpRequest post(String url, Map<String, String> headers, String body, Duration timeout) {
         HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(url))
-                .timeout(TIMEOUT)
+                .timeout(timeout)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body));
         headers.forEach(b::header);
@@ -32,6 +31,8 @@ final class HttpLlmSupport {
                 throw new LlmException(provider + " returned HTTP " + res.statusCode() + ": " + abbreviate(res.body()), res.statusCode());
             }
             return res.body();
+        } catch (HttpTimeoutException e) {
+            throw new LlmException(provider + " timed out after " + seconds(req) + "s", e);
         } catch (IOException e) {
             throw new LlmException(provider + " request failed: " + e.getMessage(), e);
         } catch (InterruptedException e) {
@@ -57,12 +58,18 @@ final class HttpLlmSupport {
                         .filter(d -> !d.isEmpty() && !"[DONE]".equals(d))
                         .forEach(onData);
             }
+        } catch (HttpTimeoutException e) {
+            throw new LlmException(provider + " timed out after " + seconds(req) + "s", e);
         } catch (IOException e) {
             throw new LlmException(provider + " stream failed: " + e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new LlmException(provider + " stream interrupted", e);
         }
+    }
+
+    private static long seconds(HttpRequest req) {
+        return req.timeout().map(Duration::toSeconds).orElse(0L);
     }
 
     static String abbreviate(String s) {
